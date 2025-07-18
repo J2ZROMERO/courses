@@ -1,4 +1,20 @@
 // src/custom.scss
+/* index.css */
+html,
+body,
+#root {
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Layout.module.scss */
+.mainContainer {
+  min-height: calc(100vh - 136px); // ajusta según tu navbar/footer
+  padding: 2rem;
+  background-color: #f8f9fa;
+}
 
 // 1) Sobrescribe variables de Bootstrap (opcional)
 // $primary: #0c5acf;
