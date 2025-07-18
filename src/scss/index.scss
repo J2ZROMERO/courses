@@ -1,0 +1,9 @@
+// src/custom.scss
+
+// 1) Sobrescribe variables de Bootstrap (opcional)
+// $primary: #0c5acf;
+// $secondary: #e2e8f0;
+// ...más variables antes del import
+
+// 2) Importa Bootstrap
+@import "bootstrap/scss/bootstrap";
