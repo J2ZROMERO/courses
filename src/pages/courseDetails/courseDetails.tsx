@@ -14,15 +14,10 @@ import {
   createSection,
   updateSection,
   deleteSection,
-} from "./services/courseDetailsService"; // tu servicio
+} from "./services/courseDetailsService";
 import { toast } from "react-toastify";
 import { toEmbedUrl } from "../../utils";
-
-interface Video {
-  id: number;
-  title: string;
-  url: string;
-}
+import { ContentByCourseDetails } from "../contentByCourseDetails/contentByCourseDetails"; // <-- tu componente
 
 interface Section {
   id: number;
@@ -37,17 +32,20 @@ export function CourseDetails() {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // --- estado para CRUD de secciones ---
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Section | null>(null);
   const [title, setTitle] = useState("");
   const [position, setPosition] = useState(0);
 
-  // Estados para los spinners
+  // --- spinners individuales ---
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
 
-  const [videoToPlay, setVideoToPlay] = useState<Video | null>(null);
+  // --- estado para abrir/ cerrar el modal de contenido ---
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [currentSectionId, setCurrentSectionId] = useState<number | null>(null);
 
   const fetchSections = async () => {
     setLoading(true);
@@ -113,6 +111,12 @@ export function CourseDetails() {
     }
   };
 
+  // ---> apertura del modal de contenidos para una sección concreta
+  const openItemModal = (sectionId: number) => {
+    setCurrentSectionId(sectionId);
+    setItemModalOpen(true);
+  };
+
   return (
     <Container className="my-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -120,13 +124,13 @@ export function CourseDetails() {
         <Button onClick={openNew}>+ Nueva Sección</Button>
       </div>
 
-      {/* Modal confirmación */}
+      {/* Confirmación de borrado */}
       <Modal show={!!sectionToDelete} onHide={() => setSectionToDelete(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar eliminación</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          ¿Estás seguro de que deseas eliminar la sección{" "}
+          ¿Seguro que deseas eliminar la sección{" "}
           <strong>{sectionToDelete?.title}</strong>?
         </Modal.Body>
         <Modal.Footer>
@@ -151,7 +155,7 @@ export function CourseDetails() {
         </Modal.Footer>
       </Modal>
 
-      {/* Tabla */}
+      {/* Tabla de secciones */}
       {loading ? (
         <div className="d-flex justify-content-center my-5">
           <Spinner animation="border" />
@@ -193,6 +197,7 @@ export function CourseDetails() {
                       size="sm"
                       variant="outline-danger"
                       onClick={() => setSectionToDelete(sec)}
+                      className="me-2"
                       disabled={deletingId === sec.id}
                     >
                       {deletingId === sec.id ? (
@@ -200,6 +205,14 @@ export function CourseDetails() {
                       ) : (
                         "Eliminar"
                       )}
+                    </Button>
+                    {/* Botón para abrir el modal de contenidos */}
+                    <Button
+                      size="sm"
+                      variant="info"
+                      onClick={() => openItemModal(sec.id)}
+                    >
+                      Agregar{" "}
                     </Button>
                   </td>
                 </tr>
@@ -209,36 +222,7 @@ export function CourseDetails() {
         </div>
       )}
 
-      {/* Timeline de vídeos */}
-      <div className="mt-5">
-        {[
-          {
-            id: 1,
-            title: "Introducción al módulo",
-            url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-          },
-          {
-            id: 2,
-            title: "Ejemplo práctico",
-            url: toEmbedUrl(
-              "https://www.loom.com/share/42fbf3616982457ba3dd01e1b1d26b83?sid=..."
-            ),
-          },
-        ].map((vid) => (
-          <div key={vid.id} className="mb-4">
-            <h4>{vid.title}</h4>
-            <ul className="list-unstyled ps-3">
-              <li className="mb-2">
-                <Button variant="link" onClick={() => setVideoToPlay(vid)}>
-                  ▶ {vid.title}
-                </Button>
-              </li>
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Modal Crear/Editar */}
+      {/* Modal Crear / Editar Sección */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -252,7 +236,6 @@ export function CourseDetails() {
               <Form.Control
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ej. Introducción a Laravel"
               />
             </Form.Group>
             <Form.Group>
@@ -262,9 +245,6 @@ export function CourseDetails() {
                 value={position}
                 onChange={(e) => setPosition(Number(e.target.value))}
               />
-              <Form.Text className="text-muted">
-                Indica el orden en que aparece esta sección.
-              </Form.Text>
             </Form.Group>
           </Form>
         </Modal.Body>
@@ -288,32 +268,12 @@ export function CourseDetails() {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal vídeo */}
-      <Modal
-        show={!!videoToPlay}
-        onHide={() => setVideoToPlay(null)}
-        size="xl"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>{videoToPlay?.title}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="d-flex justify-content-center">
-          {videoToPlay && (
-            <div style={{ width: "75vw", height: "75vh" }}>
-              <iframe
-                title={videoToPlay.title}
-                src={videoToPlay.url}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          )}
-        </Modal.Body>
-      </Modal>
+      {/* Modal de Contenidos (tu componente extraído) */}
+      <ContentByCourseDetails
+        show={itemModalOpen}
+        sectionId={currentSectionId}
+        onHide={() => setItemModalOpen(false)}
+      />
     </Container>
   );
 }
