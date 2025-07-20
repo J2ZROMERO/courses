@@ -2,25 +2,22 @@
 import { useEffect, useState } from "react";
 import {
   Button,
-  Card,
-  Col,
   Container,
   Form,
   Modal,
-  Row,
   Spinner,
   Table,
 } from "react-bootstrap";
 import { useParams } from "react-router-dom";
-import { Maximize, Minimize } from "react-bootstrap-icons"; // o cualquier librería de iconos
 import {
   getSections,
   createSection,
   updateSection,
   deleteSection,
-} from "./services/courseDetailsService"; // el servicio que definimos antes
+} from "./services/courseDetailsService"; // tu servicio
 import { toast } from "react-toastify";
 import { toEmbedUrl } from "../../utils";
+
 interface Video {
   id: number;
   title: string;
@@ -39,19 +36,25 @@ export function CourseDetails() {
   const { id } = useParams<{ id: string }>();
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Section | null>(null);
   const [title, setTitle] = useState("");
   const [position, setPosition] = useState(0);
+
+  // Estados para los spinners
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
+
   const [videoToPlay, setVideoToPlay] = useState<Video | null>(null);
 
   const fetchSections = async () => {
     setLoading(true);
     try {
       const res = await getSections(Number(id));
-      setSections(res?.data?.data.data);
-    } catch (err) {
+      setSections(res.data.data.data);
+    } catch {
       toast.error("Error cargando subsecciones");
     } finally {
       setLoading(false);
@@ -68,6 +71,7 @@ export function CourseDetails() {
     setPosition(sections.length);
     setShowModal(true);
   };
+
   const openEdit = (sec: Section) => {
     setEditing(sec);
     setTitle(sec.title);
@@ -76,31 +80,36 @@ export function CourseDetails() {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       if (editing) {
         await updateSection(editing.id, { title, position });
         toast.success("Sección actualizada");
       } else {
-        await createSection({ title, position, course_id: id });
+        await createSection({ title, position, course_id: Number(id) });
         toast.success("Sección creada");
       }
       setShowModal(false);
-      fetchSections();
+      await fetchSections();
     } catch {
       toast.error("Error guardando sección");
+    } finally {
+      setSaving(false);
     }
   };
 
   const confirmDeleteSection = async () => {
     if (!sectionToDelete) return;
+    setDeletingId(sectionToDelete.id);
     try {
       await deleteSection(sectionToDelete.id);
       toast.success("Sección eliminada");
-      fetchSections();
+      await fetchSections();
     } catch {
       toast.error("Error eliminando sección");
     } finally {
       setSectionToDelete(null);
+      setDeletingId(null);
     }
   };
 
@@ -110,7 +119,8 @@ export function CourseDetails() {
         <h3>Subsecciones</h3>
         <Button onClick={openNew}>+ Nueva Sección</Button>
       </div>
-      {/* Modal de confirmación de borrado */}
+
+      {/* Modal confirmación */}
       <Modal show={!!sectionToDelete} onHide={() => setSectionToDelete(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar eliminación</Modal.Title>
@@ -120,16 +130,32 @@ export function CourseDetails() {
           <strong>{sectionToDelete?.title}</strong>?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setSectionToDelete(null)}>
+          <Button
+            variant="secondary"
+            onClick={() => setSectionToDelete(null)}
+            disabled={deletingId === sectionToDelete?.id}
+          >
             Cancelar
           </Button>
-          <Button variant="danger" onClick={confirmDeleteSection}>
-            Eliminar
+          <Button
+            variant="danger"
+            onClick={confirmDeleteSection}
+            disabled={deletingId === sectionToDelete?.id}
+          >
+            {deletingId === sectionToDelete?.id ? (
+              <Spinner as="span" animation="border" size="sm" />
+            ) : (
+              "Eliminar"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Tabla */}
       {loading ? (
-        <Spinner animation="border" />
+        <div className="d-flex justify-content-center my-5">
+          <Spinner animation="border" />
+        </div>
       ) : (
         <div className="table-responsive">
           <Table bordered hover>
@@ -143,7 +169,7 @@ export function CourseDetails() {
               </tr>
             </thead>
             <tbody>
-              {sections?.map((sec, idx) => (
+              {sections.map((sec, idx) => (
                 <tr key={sec.id}>
                   <td>{idx + 1}</td>
                   <td>{sec.title}</td>
@@ -155,15 +181,25 @@ export function CourseDetails() {
                       variant="outline-secondary"
                       onClick={() => openEdit(sec)}
                       className="me-2"
+                      disabled={deletingId === sec.id}
                     >
-                      Editar
+                      {deletingId === sec.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Editar"
+                      )}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline-danger"
                       onClick={() => setSectionToDelete(sec)}
+                      disabled={deletingId === sec.id}
                     >
-                      Eliminar
+                      {deletingId === sec.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Eliminar"
+                      )}
                     </Button>
                   </td>
                 </tr>
@@ -172,7 +208,8 @@ export function CourseDetails() {
           </Table>
         </div>
       )}
-      {/* Listado tipo “timeline” de subsecciones */}
+
+      {/* Timeline de vídeos */}
       <div className="mt-5">
         {[
           {
@@ -184,14 +221,14 @@ export function CourseDetails() {
             id: 2,
             title: "Ejemplo práctico",
             url: toEmbedUrl(
-              "https://www.loom.com/share/42fbf3616982457ba3dd01e1b1d26b83?sid=6928ce21-193e-4382-aca9-42378bd12ea0"
+              "https://www.loom.com/share/42fbf3616982457ba3dd01e1b1d26b83?sid=..."
             ),
           },
-        ]?.map((vid) => (
+        ].map((vid) => (
           <div key={vid.id} className="mb-4">
             <h4>{vid.title}</h4>
             <ul className="list-unstyled ps-3">
-              <li key={vid.id} className="mb-2">
+              <li className="mb-2">
                 <Button variant="link" onClick={() => setVideoToPlay(vid)}>
                   ▶ {vid.title}
                 </Button>
@@ -201,7 +238,7 @@ export function CourseDetails() {
         ))}
       </div>
 
-      {/* Modal Crear / Editar */}
+      {/* Modal Crear/Editar */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -232,15 +269,26 @@ export function CourseDetails() {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModal(false)}
+            disabled={saving}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
-            {editing ? "Guardar cambios" : "Crear sección"}
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <Spinner as="span" animation="border" size="sm" />
+            ) : editing ? (
+              "Guardar cambios"
+            ) : (
+              "Crear sección"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
-      {/* Modal de reproducción de vídeo */}
+
+      {/* Modal vídeo */}
       <Modal
         show={!!videoToPlay}
         onHide={() => setVideoToPlay(null)}

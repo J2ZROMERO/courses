@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import Layout from "../components/Layout";
 import { Courses } from "../pages/courses/Courses";
 import { CourseDetails } from "../pages/courseDetails/courseDetails";
+import { Users } from "../pages/users/Users";
 export default function AppRoutes() {
   const { user } = useAuth();
 
@@ -24,6 +25,7 @@ export default function AppRoutes() {
           <Route path="/" element={<HomePage />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
+          <Route path="/users" element={<Users />} />
           {/* aquí más rutas protegidas */}
         </Route>
       </Routes>

@@ -22,13 +22,15 @@ export default function Navbar() {
         <BsNavbar.Toggle aria-controls="main-nav" />
         <BsNavbar.Collapse id="main-nav">
           <Nav className="ms-auto align-items-center">
-            <Nav.Link as={Link} to="/">
+            {/* <Nav.Link as={Link} to="/">
               Inicio
-            </Nav.Link>
+            </Nav.Link> */}
             <Nav.Link as={Link} to="/courses">
               Cursos
             </Nav.Link>
-
+            <Nav.Link as={Link} to="/users">
+              Usuarios
+            </Nav.Link>
             {user ? (
               <>
                 {/* <span className="text-white me-2">Hola, {user.name}</span> */}

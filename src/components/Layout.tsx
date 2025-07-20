@@ -11,7 +11,7 @@ export default function Layout() {
       <Navbar />
 
       {/* Aquí van las páginas hijas */}
-      <main className="mainContainer my-2">
+      <main className="mainContainer mt-2">
         <Outlet />
       </main>
 

@@ -11,9 +11,22 @@ body,
 
 /* Layout.module.scss */
 .mainContainer {
-  min-height: calc(100vh - 136px); // ajusta según tu navbar/footer
+  min-height: calc(100vh - 105px); // ajusta según tu navbar/footer
   padding: 2rem;
   background-color: #f8f9fa;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  transition: transform 0.2s;
+}
+h2,
+h3,
+h4 {
+  line-height: 1.3;
+}
+.card-title {
+  font-weight: 600;
 }
 
 // 1) Sobrescribe variables de Bootstrap (opcional)
