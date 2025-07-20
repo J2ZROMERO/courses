@@ -22,7 +22,7 @@ export default function AppRoutes() {
 
         {/* Todas las demás rutas van dentro de Layout */}
         <Route element={user ? <Layout /> : <Navigate to="/login" />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Courses />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/users" element={<Users />} />

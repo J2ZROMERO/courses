@@ -39,7 +39,7 @@ export function Courses() {
     description: "",
     created_by: 1,
   });
-  const { user } = useAuth();
+  const { user, userIs } = useAuth();
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -109,7 +109,9 @@ export function Courses() {
     <Container className="my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Cursos</h2>
-        <Button onClick={() => setShowModal(true)}>Nuevo Curso</Button>
+        {userIs("teacher") && (
+          <Button onClick={() => setShowModal(true)}>Nuevo Curso</Button>
+        )}
       </div>
 
       {loading ? (
@@ -127,26 +129,28 @@ export function Courses() {
                 <Card.Body>
                   <Card.Title>{course.title}</Card.Title>
                   <Card.Text>{course.description}</Card.Text>
-                  <div className="d-flex justify-content-between">
-                    <Button
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(course);
-                      }}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCourseToDelete(course);
-                      }}
-                    >
-                      Eliminar
-                    </Button>
-                  </div>
+                  {userIs("teacher") && (
+                    <div className="d-flex justify-content-between">
+                      <Button
+                        variant="outline-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(course);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCourseToDelete(course);
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </Col>

@@ -39,11 +39,10 @@ export default function LoginPage() {
     try {
       // Await para que isSubmitting esté activo durante la petición
       const response = await api.post("/login", { email, password });
-      console.log(response?.data);
 
-      const { user, token } = response.data;
+      const { user, token, roles } = response.data;
       // 3) llamas a login() con la forma que tu contexto espera
-      login({ user, token });
+      login({ user, token, roles });
       navigate("/");
     } catch (err: any) {
       // Mostrar error al usuario

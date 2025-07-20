@@ -5,9 +5,10 @@ import {
   Container,
   Table,
   Modal,
-  Form,
   Spinner,
+  Form,
 } from "react-bootstrap";
+import { useForm, SubmitHandler } from "react-hook-form";
 import {
   getUsers,
   createUser,
@@ -17,19 +18,30 @@ import {
 } from "./services/userService";
 import { toast } from "react-toastify";
 
+type FormValues = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export function Users() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Modal de crear/editar
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
 
-  const [form, setForm] = useState<Partial<User>>({
-    name: "",
-    email: "",
-    password: "",
-  });
+  // react-hook-form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>();
 
+  // Modal de confirmación de borrado
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetch = async () => {
@@ -50,47 +62,56 @@ export function Users() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ name: "", email: "", password: "" });
+    reset({ name: "", email: "", password: "" });
     setShowModal(true);
   };
 
   const openEdit = (u: User) => {
     setEditing(u);
-    setForm({ name: u.name, email: u.email });
+    reset({ name: u.name, email: u.email, password: "" });
     setShowModal(true);
   };
 
-  const handleSave = async () => {
-    try {
-      if (editing?.id) {
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    if (editing?.id) {
+      try {
         await updateUser(editing.id, {
-          name: form.name!,
-          email: form.email!,
+          name: data.name,
+          email: data.email,
+          password: data.password || undefined, // solo si se llenó
         });
         toast.success("Usuario actualizado");
-      } else {
-        await createUser({
-          name: form.name!,
-          email: form.email!,
-          password: form.password!,
-        });
-        toast.success("Usuario creado");
+      } catch (error) {
+        toast.error("No se pudo actualizar.");
       }
-      setShowModal(false);
-      fetch();
-    } catch {
-      toast.error("Error al guardar usuario");
+    } else {
+      await createUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+      toast.success("Usuario creado");
     }
+    setShowModal(false);
+    await fetch();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("¿Confirmas que deseas eliminar este usuario?")) return;
+  const confirmDelete = (u: User) => {
+    setUserToDelete(u);
+  };
+
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    setDeletingId(userToDelete.id);
     try {
-      await deleteUser(id);
+      await deleteUser(userToDelete.id);
       toast.success("Usuario eliminado");
-      fetch();
+      await fetch();
     } catch {
       toast.error("Error al eliminar usuario");
+    } finally {
+      setDeletingId(null);
+      setUserToDelete(null);
     }
   };
 
@@ -102,7 +123,9 @@ export function Users() {
       </div>
 
       {loading ? (
-        <Spinner animation="border" />
+        <div className="d-flex justify-content-center">
+          <Spinner animation="border" />
+        </div>
       ) : (
         <Table bordered hover responsive>
           <thead>
@@ -114,7 +137,7 @@ export function Users() {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {users?.data?.map((u) => (
               <tr key={u.id}>
                 <td>{u.id}</td>
                 <td>{u.name}</td>
@@ -122,17 +145,28 @@ export function Users() {
                 <td>
                   <Button
                     size="sm"
+                    variant="outline-secondary"
                     onClick={() => openEdit(u)}
                     className="me-2"
+                    disabled={deletingId === u.id}
                   >
-                    Editar
+                    {deletingId === u.id ? (
+                      <Spinner as="span" animation="border" size="sm" />
+                    ) : (
+                      "Editar"
+                    )}
                   </Button>
                   <Button
                     size="sm"
-                    variant="danger"
-                    onClick={() => handleDelete(u.id!)}
+                    variant="outline-danger"
+                    onClick={() => confirmDelete(u)}
+                    disabled={deletingId === u.id}
                   >
-                    Eliminar
+                    {deletingId === u.id ? (
+                      <Spinner as="span" animation="border" size="sm" />
+                    ) : (
+                      "Eliminar"
+                    )}
                   </Button>
                 </td>
               </tr>
@@ -143,51 +177,111 @@ export function Users() {
 
       {/* Modal Crear / Editar */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editing ? "Editar Usuario" : "Nuevo Usuario"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
+        <Form onSubmit={handleSubmit(onSubmit)}>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {editing ? "Editar Usuario" : "Nuevo Usuario"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
             <Form.Group className="mb-3">
               <Form.Label>Nombre</Form.Label>
               <Form.Control
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Juan Pérez"
+                {...register("name", { required: "Requerido" })}
+                isInvalid={!!errors.name}
+                disabled={isSubmitting}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.name?.message}
+              </Form.Control.Feedback>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="juan@example.com"
+                {...register("email", {
+                  required: "Requerido",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Email inválido",
+                  },
+                })}
+                isInvalid={!!errors.email}
+                disabled={isSubmitting}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.email?.message}
+              </Form.Control.Feedback>
             </Form.Group>
-            {!editing && (
-              <Form.Group className="mb-3">
-                <Form.Label>Contraseña</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  placeholder="12345678"
-                />
-              </Form.Group>
-            )}
-          </Form>
+            <Form.Group className="mb-3">
+              <Form.Label>
+                Contraseña{" "}
+                {editing && <small className="text-muted">(opcional)</small>}
+              </Form.Label>
+              <Form.Control
+                type="password"
+                {...register("password", {
+                  required: !editing && "Requerido",
+                  minLength: editing
+                    ? undefined
+                    : { value: 6, message: "Mínimo 6 caracteres" },
+                })}
+                isInvalid={!!errors.password}
+                disabled={isSubmitting}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.password?.message}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Spinner as="span" animation="border" size="sm" />
+              ) : editing ? (
+                "Guardar cambios"
+              ) : (
+                "Crear usuario"
+              )}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Modal Confirmar Eliminación */}
+      <Modal show={!!userToDelete} onHide={() => setUserToDelete(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          ¿Estás seguro de que deseas eliminar al usuario{" "}
+          <strong>{userToDelete?.name}</strong>?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setUserToDelete(null)}
+            disabled={deletingId === userToDelete?.id}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
-            {editing ? "Guardar cambios" : "Crear usuario"}
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            disabled={deletingId === userToDelete?.id}
+          >
+            {deletingId === userToDelete?.id ? (
+              <Spinner as="span" animation="border" size="sm" />
+            ) : (
+              "Eliminar"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

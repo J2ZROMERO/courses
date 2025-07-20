@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // ✅ Import the context
 
 export default function Navbar() {
-  const { user, logout } = useAuth(); // ✅ Access user and logout
+  const { user, logout, userIs } = useAuth(); // ✅ Access user and logout
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -28,9 +28,11 @@ export default function Navbar() {
             <Nav.Link as={Link} to="/courses">
               Cursos
             </Nav.Link>
-            <Nav.Link as={Link} to="/users">
-              Usuarios
-            </Nav.Link>
+            {userIs("teacher") && (
+              <Nav.Link as={Link} to="/users">
+                Usuarios
+              </Nav.Link>
+            )}
             {user ? (
               <>
                 {/* <span className="text-white me-2">Hola, {user.name}</span> */}

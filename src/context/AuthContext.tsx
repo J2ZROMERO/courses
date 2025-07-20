@@ -55,8 +55,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const login = (userData: User & { token: string }) => {
-    setUser(userData?.user);
-    localStorage.setItem("user", JSON.stringify(userData?.user));
+    setUser(userData);
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ ...userData?.user, roles: userData?.roles })
+    );
     localStorage.setItem("token", userData?.token); // ✅ Store the token!
   };
 
@@ -67,10 +70,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const userCan = (ability: string) => Boolean(user && user.role === ability);
 
-  const userIs = (role: string | string[]) => {
+  const userIs = (role: string | string[]): boolean => {
     if (!user) return false;
-    if (Array.isArray(role)) return role.includes(user.role);
-    return user.role === role;
+
+    // Make sure we're always working with an array
+    const wanted = Array?.isArray(role) ? role : [role];
+
+    // Check if any of the wanted roles is in the user's roles array
+    return wanted?.some((r) => user?.roles.includes(r));
   };
 
   return (

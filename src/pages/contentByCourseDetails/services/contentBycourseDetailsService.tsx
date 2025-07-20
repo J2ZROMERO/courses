@@ -17,7 +17,7 @@ export interface SectionItem extends SectionItemPayload {
 
 // Listar items de una sección
 export const getContentBySectionItems = (sectionId: number) =>
-  api.get<SectionItem[]>(`/elements/${sectionId}`);
+  api.get<SectionItem[]>(`/elements?section=${sectionId}`);
 
 // Crear un item
 export const createContentBySectionItem = (payload: SectionItemPayload) =>
