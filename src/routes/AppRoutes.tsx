@@ -1,11 +1,12 @@
 // src/routes/AppRoutes.jsx
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "../pages/home/HomePage";
 import LoginPage from "../pages/login/LoginPage";
 // import CoursePage from "./pages/CoursePage";
 import { useAuth } from "../context/AuthContext";
 import Layout from "../components/Layout";
+import { Courses } from "../pages/courses/Courses";
+import { CourseDetails } from "../pages/courseDetails/courseDetails";
 export default function AppRoutes() {
   const { user } = useAuth();
 
@@ -21,7 +22,8 @@ export default function AppRoutes() {
         {/* Todas las demás rutas van dentro de Layout */}
         <Route element={user ? <Layout /> : <Navigate to="/login" />}>
           <Route path="/" element={<HomePage />} />
-          {/* <Route path="/courses/:id" element={<CoursePage />} /> */}
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/:id" element={<CourseDetails />} />
           {/* aquí más rutas protegidas */}
         </Route>
       </Routes>

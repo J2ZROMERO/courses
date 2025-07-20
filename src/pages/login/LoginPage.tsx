@@ -10,8 +10,11 @@ import {
   Row,
   Col,
   Alert,
+  Spinner,
 } from "react-bootstrap";
 import { useAuth, User } from "../../context/AuthContext";
+import api from "../../api/axios";
+import { toast } from "react-toastify";
 
 type LoginFormInputs = {
   email: string;
@@ -34,21 +37,17 @@ export default function LoginPage() {
   }) => {
     setError(null);
     try {
-      // Simulación de llamada al backend
-      if (email === "admin@ejemplo.com" && password === "123456") {
-        const userData: User = {
-          id: 1,
-          name: "Admin Ejemplo",
-          email,
-          role: "admin",
-        };
-        login(userData);
-        navigate("/");
-      } else {
-        throw new Error("Credenciales inválidas");
-      }
+      // Await para que isSubmitting esté activo durante la petición
+      const response = await api.post("/login", { email, password });
+      console.log(response?.data);
+
+      const { user, token } = response.data;
+      // 3) llamas a login() con la forma que tu contexto espera
+      login({ user, token });
+      navigate("/");
     } catch (err: any) {
-      setError(err.message);
+      // Mostrar error al usuario
+      toast.error("Credenciales incorrectas");
     }
   };
 
@@ -113,7 +112,21 @@ export default function LoginPage() {
                     className="w-100"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Validando..." : "Entrar"}
+                    {isSubmitting ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Validando...
+                      </>
+                    ) : (
+                      "Entrar"
+                    )}
                   </Button>
                 </Form>
               </Card.Body>

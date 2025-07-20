@@ -13,7 +13,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
-  // añade aquí otros campos que guarde tu userData
+  token: string; // ✅ add this
 }
 
 // 2) Interfaz para el valor del contexto
@@ -40,12 +40,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Cargar usuario de localStorage al iniciar
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    // descartamos null, undefined y la cadena "undefined"
+    if (stored && stored !== "undefined") {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        console.warn(
+          "AuthContext: no pude parsear el user del localStorage",
+          stored
+        );
+        localStorage.removeItem("user");
+      }
+    }
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+  const login = (userData: User & { token: string }) => {
+    setUser(userData?.user);
+    localStorage.setItem("user", JSON.stringify(userData?.user));
+    localStorage.setItem("token", userData?.token); // ✅ Store the token!
   };
 
   const logout = () => {
