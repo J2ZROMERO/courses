@@ -23,3 +23,7 @@ export function updateUser(id: number, data: Partial<User>) {
 export function deleteUser(id: number) {
   return api.delete(`/users/${id}`);
 }
+
+export function getUserById(id: number) {
+  return api.get(`/users/${id}`);
+}

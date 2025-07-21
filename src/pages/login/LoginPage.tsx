@@ -94,10 +94,6 @@ export default function LoginPage() {
                       isInvalid={!!errors.password}
                       {...register("password", {
                         required: "La contraseña es obligatoria",
-                        minLength: {
-                          value: 6,
-                          message: "Mínimo 6 caracteres",
-                        },
                       })}
                     />
                     <Form.Control.Feedback type="invalid">

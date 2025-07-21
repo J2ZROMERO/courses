@@ -17,6 +17,7 @@ import {
   User,
 } from "./services/userService";
 import { toast } from "react-toastify";
+import { EnrollModal } from "./components/enrollCourses/EnrollModal";
 
 type FormValues = {
   name: string;
@@ -31,6 +32,7 @@ export function Users() {
   // Modal de crear/editar
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
+  const [enrollUser, setEnrollUser] = useState<User | null>(null);
 
   // react-hook-form
   const {
@@ -143,38 +145,54 @@ export function Users() {
                 <td>{u.name}</td>
                 <td>{u.email}</td>
                 <td>
-                  <Button
-                    size="sm"
-                    variant="outline-secondary"
-                    onClick={() => openEdit(u)}
-                    className="me-2"
-                    disabled={deletingId === u.id}
-                  >
-                    {deletingId === u.id ? (
-                      <Spinner as="span" animation="border" size="sm" />
-                    ) : (
-                      "Editar"
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => confirmDelete(u)}
-                    disabled={deletingId === u.id}
-                  >
-                    {deletingId === u.id ? (
-                      <Spinner as="span" animation="border" size="sm" />
-                    ) : (
-                      "Eliminar"
-                    )}
-                  </Button>
+                  <div className="d-flex">
+                    <Button
+                      size="sm"
+                      variant="outline-secondary"
+                      onClick={() => openEdit(u)}
+                      className="me-2"
+                      disabled={deletingId === u.id}
+                    >
+                      {deletingId === u.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Editar"
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={() => confirmDelete(u)}
+                      disabled={deletingId === u.id}
+                    >
+                      {deletingId === u.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Eliminar"
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      className="ms-2"
+                      onClick={() => setEnrollUser(u)}
+                    >
+                      Inscribir
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </Table>
       )}
-
+      {enrollUser && (
+        <EnrollModal
+          show={!!enrollUser}
+          user={enrollUser}
+          onHide={() => setEnrollUser(null)}
+        />
+      )}
       {/* Modal Crear / Editar */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Form onSubmit={handleSubmit(onSubmit)}>
@@ -195,6 +213,7 @@ export function Users() {
                 {errors.name?.message}
               </Form.Control.Feedback>
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -213,18 +232,13 @@ export function Users() {
                 {errors.email?.message}
               </Form.Control.Feedback>
             </Form.Group>
+
             <Form.Group className="mb-3">
-              <Form.Label>
-                Contraseña{" "}
-                {editing && <small className="text-muted">(opcional)</small>}
-              </Form.Label>
+              <Form.Label>Contraseña</Form.Label>
               <Form.Control
                 type="password"
                 {...register("password", {
                   required: !editing && "Requerido",
-                  minLength: editing
-                    ? undefined
-                    : { value: 6, message: "Mínimo 6 caracteres" },
                 })}
                 isInvalid={!!errors.password}
                 disabled={isSubmitting}
@@ -236,7 +250,7 @@ export function Users() {
           </Modal.Body>
           <Modal.Footer>
             <Button
-              variant="outline-secondary"
+              variant="secondary"
               onClick={() => setShowModal(false)}
               disabled={isSubmitting}
             >

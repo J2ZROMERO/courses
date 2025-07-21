@@ -2,6 +2,7 @@
 import api from "../../../api/axios";
 
 export const getCourses = () => api.get("/courses");
+export const getCoursesByUser = (id: number) => api.get(`/users/${id}`);
 export const getCourse = (id: number) => api.get(`/courses/${id}`);
 export const createCourse = (data: any) => api.post("/courses", data);
 export const updateCourse = (id: number, data: any) =>

@@ -12,3 +12,8 @@ export const updateSection = (
 ) => api.put(`/sections/${id}`, data);
 
 export const deleteSection = (id: number) => api.delete(`/sections/${id}`);
+
+export const markElementAsSeen = (payload: {
+  element_id: number;
+  user_id: number;
+}) => api.post(`/elements/progress`, payload);

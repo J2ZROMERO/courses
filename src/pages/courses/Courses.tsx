@@ -10,11 +10,14 @@ import {
   Modal,
   Spinner,
 } from "react-bootstrap";
+import { useForm, SubmitHandler } from "react-hook-form";
 import {
   getCourses,
   createCourse,
   deleteCourse,
   updateCourse,
+  getCoursesByUser,
+  UserCourseResponse,
 } from "./services/courseService";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
@@ -27,26 +30,50 @@ interface Course {
   created_by: number;
 }
 
+type FormValues = {
+  title: string;
+  description: string;
+};
+
 export function Courses() {
+  const { user, userIs } = useAuth();
+  const navigate = useNavigate();
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
-  const navigate = useNavigate();
 
+  // Este estado contendrá el curso que editamos (o vacío para crear)
   const [formData, setFormData] = useState<Course>({
     title: "",
     description: "",
-    created_by: 1,
+    created_by: user?.id ?? 0,
   });
-  const { user, userIs } = useAuth();
 
+  // react-hook-form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<FormValues>({
+    mode: "onChange",
+    defaultValues: { title: "", description: "" },
+  });
+
+  // Carga de cursos
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const res = await getCourses();
-      setCourses(res?.data?.data?.data);
-    } catch (err) {
+      if (userIs("teacher")) {
+        const res = await getCourses();
+        setCourses(res.data.data.data);
+      } else {
+        const res = await getCoursesByUser(user?.user?.id);
+        setCourses(res.data.data as Course[]);
+      }
+    } catch {
       toast.error("Error cargando cursos");
     } finally {
       setLoading(false);
@@ -55,27 +82,40 @@ export function Courses() {
 
   useEffect(() => {
     fetchCourses();
-  }, []);
+  }, [user]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Cuando abrimos el modal para editar, precargamos valores
+  const openEdit = (course: Course) => {
+    setFormData(course);
+    reset({
+      title: course.title,
+      description: course.description,
+    });
+    setShowModal(true);
   };
 
-  const handleSave = async () => {
+  // Abrir modal en modo "Nuevo"
+  const openNew = () => {
+    console.log(user?.user?.id);
+    console.log(user);
+
+    setFormData({ title: "", description: "", created_by: user?.user?.id });
+    reset({ title: "", description: "" });
+    setShowModal(true);
+  };
+
+  // Guardar o actualizar
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setLoading(true);
     try {
       if (formData.id) {
-        const { title, description } = formData;
-        await updateCourse(formData.id, { title, description });
+        await updateCourse(formData.id, data);
         toast.success("Curso actualizado correctamente");
       } else {
-        await createCourse({ ...formData, created_by: user?.id });
+        await createCourse({ ...data, created_by: user?.user?.id });
         toast.success("Curso creado correctamente");
       }
       setShowModal(false);
-      setFormData({ title: "", description: "", created_by: user?.id });
       await fetchCourses();
     } catch {
       toast.error("Error guardando curso");
@@ -84,24 +124,19 @@ export function Courses() {
     }
   };
 
-  const handleEdit = (course: Course) => {
-    setFormData(course);
-    setShowModal(true);
-  };
-
+  // Confirmar y eliminar
   const confirmDeleteCourse = async () => {
-    if (courseToDelete) {
-      setLoading(true);
-      try {
-        await deleteCourse(courseToDelete.id!);
-        toast.success("Curso eliminado correctamente");
-        await fetchCourses();
-      } catch {
-        toast.error("Error al eliminar el curso");
-      } finally {
-        setLoading(false);
-        setCourseToDelete(null);
-      }
+    if (!courseToDelete?.id) return;
+    setLoading(true);
+    try {
+      await deleteCourse(courseToDelete.id);
+      toast.success("Curso eliminado correctamente");
+      await fetchCourses();
+    } catch {
+      toast.error("Error al eliminar curso");
+    } finally {
+      setLoading(false);
+      setCourseToDelete(null);
     }
   };
 
@@ -109,9 +144,7 @@ export function Courses() {
     <Container className="my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Cursos</h2>
-        {userIs("teacher") && (
-          <Button onClick={() => setShowModal(true)}>Nuevo Curso</Button>
-        )}
+        {userIs("teacher") && <Button onClick={openNew}>+ Nuevo Curso</Button>}
       </div>
 
       {loading ? (
@@ -120,31 +153,33 @@ export function Courses() {
         </div>
       ) : (
         <Row>
-          {courses.map((course) => (
-            <Col key={course.id} md={4} className="mb-4">
+          {courses.map((c) => (
+            <Col key={c.id} md={4} className="mb-4">
               <Card
-                onClick={() => navigate(`/courses/${course.id}`)}
+                onClick={() => navigate(`/courses/${c.id}`)}
                 style={{ cursor: "pointer" }}
               >
                 <Card.Body>
-                  <Card.Title>{course.title}</Card.Title>
-                  <Card.Text>{course.description}</Card.Text>
+                  <Card.Title>{c.title}</Card.Title>
+                  <Card.Text>{c.description}</Card.Text>
                   {userIs("teacher") && (
                     <div className="d-flex justify-content-between">
                       <Button
                         variant="outline-secondary"
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEdit(course);
+                          openEdit(c);
                         }}
                       >
                         Editar
                       </Button>
                       <Button
                         variant="outline-danger"
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setCourseToDelete(course);
+                          setCourseToDelete(c);
                         }}
                       >
                         Eliminar
@@ -160,48 +195,66 @@ export function Courses() {
 
       {/* Modal Crear/Editar */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {formData.id ? "Editar Curso" : "Nuevo Curso"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
+        <Form noValidate onSubmit={handleSubmit(onSubmit)}>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {formData.id ? "Editar Curso" : "Nuevo Curso"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group className="mb-3" controlId="courseTitle">
               <Form.Label>Título</Form.Label>
               <Form.Control
                 type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
+                placeholder="Ingresa el título"
+                isInvalid={!!errors.title}
+                {...register("title", {
+                  required: "El título es obligatorio",
+                })}
+                disabled={isSubmitting}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.title?.message}
+              </Form.Control.Feedback>
             </Form.Group>
-            <Form.Group>
+
+            <Form.Group controlId="courseDescription">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
                 as="textarea"
-                name="description"
                 rows={3}
-                value={formData.description}
-                onChange={handleInputChange}
+                placeholder="Ingresa la descripción"
+                isInvalid={!!errors.description}
+                {...register("description", {
+                  required: "La descripción es obligatoria",
+                })}
+                disabled={isSubmitting}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.description?.message}
+              </Form.Control.Feedback>
             </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? (
-              <Spinner as="span" animation="border" size="sm" />
-            ) : formData.id ? (
-              "Actualizar"
-            ) : (
-              "Crear"
-            )}
-          </Button>
-        </Modal.Footer>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary">
+              {isSubmitting ? (
+                <Spinner as="span" animation="border" size="sm" />
+              ) : formData.id ? (
+                "Actualizar"
+              ) : (
+                "Crear"
+              )}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
 
       {/* Modal Confirmar Eliminación */}

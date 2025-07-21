@@ -183,10 +183,10 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
             <Table bordered hover>
               <thead>
                 <tr>
-                  <th>#</th>
+                  {/* <th>#</th> */}
                   <th>Título</th>
                   <th>URL</th>
-                  <th>Pos.</th>
+                  <th>Posicion</th>
                   <th>Tipo</th>
                   <th>Acciones</th>
                 </tr>
@@ -194,7 +194,7 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
               <tbody>
                 {items?.data?.data.map((it, i) => (
                   <tr key={it.id}>
-                    <td>{i + 1}</td>
+                    {/* <td>{i + 1}</td> */}
                     <td>{it.title}</td>
                     <td>
                       <a href={it.url} target="_blank" rel="noreferrer">

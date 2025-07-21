@@ -1,6 +1,5 @@
 // src/routes/AppRoutes.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import HomePage from "../pages/home/HomePage";
 import LoginPage from "../pages/login/LoginPage";
 // import CoursePage from "./pages/CoursePage";
 import { useAuth } from "../context/AuthContext";
