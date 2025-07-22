@@ -180,7 +180,7 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
               <Spinner animation="border" />
             </div>
           ) : (
-            <Table bordered hover>
+            <Table bordered hover responsive>
               <thead>
                 <tr>
                   {/* <th>#</th> */}
@@ -202,7 +202,7 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
                       </a>
                     </td>
                     <td>{it.position}</td>
-                    <td>{it.type}</td>
+                    <td>{it.type == 1 ? "Video" : ""}</td>
                     <td>
                       <Button
                         size="sm"
@@ -244,7 +244,7 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide} disabled={saving}>
-            Cancelar
+            Cerrar
           </Button>
         </Modal.Footer>
       </Modal>

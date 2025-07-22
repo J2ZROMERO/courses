@@ -96,9 +96,6 @@ export function Courses() {
 
   // Abrir modal en modo "Nuevo"
   const openNew = () => {
-    console.log(user?.user?.id);
-    console.log(user);
-
     setFormData({ title: "", description: "", created_by: user?.user?.id });
     reset({ title: "", description: "" });
     setShowModal(true);

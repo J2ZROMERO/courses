@@ -12,7 +12,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: string;
+  roles: string[];
   token: string; // ✅ add this
 }
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // descartamos null, undefined y la cadena "undefined"
     if (stored && stored !== "undefined") {
       try {
-        setUser(JSON.parse(stored));
+        setUser(JSON?.parse(stored));
       } catch {
         console.warn(
           "AuthContext: no pude parsear el user del localStorage",
@@ -56,11 +56,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = (userData: User & { token: string }) => {
     setUser(userData);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ ...userData?.user, roles: userData?.roles })
-    );
-    localStorage.setItem("token", userData?.token); // ✅ Store the token!
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", userData?.token);
   };
 
   const logout = () => {

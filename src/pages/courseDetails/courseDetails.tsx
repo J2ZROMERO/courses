@@ -1,6 +1,4 @@
-// src/pages/courses/SectionManager.tsx
-// src/pages/courses/SectionManager.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Container,
@@ -15,7 +13,6 @@ import {
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  getSections,
   createSection,
   updateSection,
   deleteSection,
@@ -239,59 +236,57 @@ export function CourseDetails() {
               </tr>
             </thead>
             <tbody>
-              {course?.sections
-                ?.sort((a, b) => a.position - b.position)
-                ?.map((sec, i) => (
-                  <tr key={sec.id}>
-                    {/* <td>{i + 1}</td> */}
-                    <td>{sec.title}</td>
-                    <td>{sec.position}</td>
-                    <td>{new Date(sec.created_at).toLocaleString()}</td>
-                    <td className="d-flex">
-                      {/* Editar */}
-                      <Button
-                        size="sm"
-                        variant="outline-secondary"
-                        className="me-2"
-                        disabled={deletingSecId === sec.id}
-                        onClick={() => {
-                          setEditingSec(sec);
-                          setSecTitle(sec.title);
-                          setSecPos(sec.position);
-                          setShowSecModal(true);
-                        }}
-                      >
-                        {deletingSecId === sec.id ? (
-                          <Spinner as="span" animation="border" size="sm" />
-                        ) : (
-                          "Editar"
-                        )}
-                      </Button>
-                      {/* Eliminar */}
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        className="me-2"
-                        disabled={deletingSecId === sec.id}
-                        onClick={() => setSecToDelete(sec)}
-                      >
-                        {deletingSecId === sec.id ? (
-                          <Spinner as="span" animation="border" size="sm" />
-                        ) : (
-                          "Eliminar"
-                        )}
-                      </Button>
-                      {/* Agregar contenido */}
-                      <Button
-                        size="sm"
-                        variant="outline-info"
-                        onClick={() => openItemModal(sec.id)}
-                      >
-                        Agregar
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+              {course?.sections?.map((sec) => (
+                <tr key={sec.id}>
+                  {/* <td>{i + 1}</td> */}
+                  <td>{sec.title}</td>
+                  <td>{sec.position}</td>
+                  <td>{new Date(sec.created_at).toLocaleString()}</td>
+                  <td className="d-flex">
+                    {/* Editar */}
+                    <Button
+                      size="sm"
+                      variant="outline-secondary"
+                      className="me-2"
+                      disabled={deletingSecId === sec.id}
+                      onClick={() => {
+                        setEditingSec(sec);
+                        setSecTitle(sec.title);
+                        setSecPos(sec.position);
+                        setShowSecModal(true);
+                      }}
+                    >
+                      {deletingSecId === sec.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Editar"
+                      )}
+                    </Button>
+                    {/* Eliminar */}
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      className="me-2"
+                      disabled={deletingSecId === sec.id}
+                      onClick={() => setSecToDelete(sec)}
+                    >
+                      {deletingSecId === sec.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        "Eliminar"
+                      )}
+                    </Button>
+                    {/* Agregar contenido */}
+                    <Button
+                      size="sm"
+                      variant="outline-info"
+                      onClick={() => openItemModal(sec.id)}
+                    >
+                      Agregar
+                    </Button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </Table>
         </>
@@ -301,47 +296,71 @@ export function CourseDetails() {
       <h2 className="mt-5 mb-1">{course?.title}</h2>
       <p className="mb-5">{course?.description}</p>
 
-      {course.sections
-        .sort((a, b) => a.position - b.position)
-        .map((sec) => (
-          <div key={sec.id} className="mb-4">
-            <h5 className="text-secondary">{sec.title}</h5>
-            <Row className="d-flex flex-column">
-              {sec.elements
-                .sort((a, b) => a.position - b.position)
-                .map((el, idx) => (
-                  <Col
-                    key={el.id}
-                    xs={12}
-                    className="d-flex align-items-center mb-2"
-                  >
-                    <div
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: "50%",
-                        background: el.status_progress ? "#28a745" : "#ccc",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 10,
-                      }}
-                    >
-                      {idx + 1}
-                    </div>
-                    <Card
-                      style={{ cursor: "pointer", flex: 1 }}
-                      onClick={() => setVideoModal({ element: el, show: true })}
-                    >
-                      <Card.Body className="py-2">{el.title}</Card.Body>
-                    </Card>
-                  </Col>
-                ))}
-            </Row>
-          </div>
-        ))}
+      {course?.sections?.map((sec) => (
+        <div key={sec.id} className="mb-4">
+          <h5 className="text-secondary">{sec.title}</h5>
+          <Row className="d-flex flex-column">
+            {sec?.elements?.map((el) => (
+              <Col
+                key={el.id}
+                xs={12}
+                className="d-flex align-items-center mb-2"
+              >
+                <div
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    background: el.status_progress ? "#28a745" : "#ccc",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 10,
+                  }}
+                >
+                  {el?.position}
+                </div>
 
+                {/* Make this wrapper position:relative so we can absolutely position the lock */}
+                <div style={{ position: "relative", flex: 1 }}>
+                  <Card
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                      el.unlock
+                        ? setVideoModal({ element: el, show: true })
+                        : null
+                    }
+                    className={!el.unlock ? "opacity-75" : undefined}
+                  >
+                    <Card.Body className="py-2">{el.title}</Card.Body>
+                  </Card>
+
+                  {/* Overlay lock icon when not unlocked */}
+                  {!el.unlock && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        pointerEvents: "none",
+                        fontSize: 24,
+                        color: "rgba(0,0,0,0.4)",
+                        lineHeight: 1,
+                      }}
+                      aria-label="locked"
+                      role="img"
+                    >
+                      🔒
+                    </span>
+                  )}
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      ))}
       {/* Video player modal */}
       <Modal
         show={videoModal.show}

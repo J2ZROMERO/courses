@@ -2,8 +2,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./scss/index.scss";
-import "./index.css";
-
 import { AuthProvider } from "./context/AuthContext";
 import AppRoutes from "./routes/AppRoutes";
 
