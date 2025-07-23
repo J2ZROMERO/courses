@@ -28,6 +28,14 @@ h4 {
   font-weight: 600;
 }
 
+.modal-full-height .modal-content {
+  height: 90vh;
+  margin: 0;
+}
+.modal-full-height .modal-body {
+  overflow-y: auto;
+}
+
 // 1) Sobrescribe variables de Bootstrap (opcional)
 // $primary: #0c5acf;
 // $secondary: #e2e8f0;

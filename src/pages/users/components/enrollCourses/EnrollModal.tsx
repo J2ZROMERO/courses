@@ -93,7 +93,7 @@ export function EnrollModal({ show, user, onHide }: Props) {
               <Spinner animation="border" />
             </div>
           ) : (
-            <Form.Group>
+            <Form.Group className="mb-5">
               <Form.Label>Cursos</Form.Label>
               <Controller
                 control={control}

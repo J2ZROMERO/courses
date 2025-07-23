@@ -12,20 +12,29 @@ import {
 import { toast } from "react-toastify";
 import { toEmbedUrl } from "../../utils";
 import { useForm } from "react-hook-form";
+import { QuestionManagerModal } from "../questions/QuestionManagerModal";
 
 interface Props {
   show: boolean;
   sectionId: number | null;
   onHide: () => void;
+  modalTitle: string;
 }
 
-export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
+export function ContentByCourseDetails({
+  modalTitle,
+  show,
+  sectionId,
+  onHide,
+}: Props) {
   const [items, setItems] = useState<SectionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<SectionItem | null>(null);
   const [editing, setEditing] = useState<SectionItem | null>(null);
+  const [showQMgr, setShowQMgr] = useState(false);
+  const [activeElementId, setActiveElementId] = useState<number | null>(null);
 
   const {
     register,
@@ -110,9 +119,14 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
 
   return (
     <>
-      <Modal show={show} onHide={onHide} size="xl">
+      <Modal
+        show={show}
+        onHide={onHide}
+        size="xl"
+        dialogClassName="modal-full-height"
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Elementos sección #{sectionId}</Modal.Title>
+          <Modal.Title>{modalTitle}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form className="mb-4" onSubmit={handleSubmit(onSubmit)}>
@@ -204,37 +218,48 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
                     <td>{it.position}</td>
                     <td>{it.type == 1 ? "Video" : ""}</td>
                     <td>
-                      <Button
-                        size="sm"
-                        variant="outline-secondary"
-                        className="me-2"
-                        onClick={() => {
-                          setEditing(it);
-                          setValue("title", it.title);
-                          setValue("url", it.url);
-                          setValue("position", it.position);
-                          setValue("type", it.type);
-                        }}
-                        disabled={deletingId === it.id}
-                      >
-                        {deletingId === it.id ? (
-                          <Spinner as="span" animation="border" size="sm" />
-                        ) : (
-                          "Editar"
-                        )}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() => askDelete(it)}
-                        disabled={deletingId === it.id}
-                      >
-                        {deletingId === it.id ? (
-                          <Spinner as="span" animation="border" size="sm" />
-                        ) : (
-                          "Eliminar"
-                        )}
-                      </Button>
+                      <div className="d-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline-secondary"
+                          onClick={() => {
+                            setEditing(it);
+                            setValue("title", it.title);
+                            setValue("url", it.url);
+                            setValue("position", it.position);
+                            setValue("type", it.type);
+                          }}
+                          disabled={deletingId === it.id}
+                        >
+                          {deletingId === it.id ? (
+                            <Spinner as="span" animation="border" size="sm" />
+                          ) : (
+                            "Editar"
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          onClick={() => askDelete(it)}
+                          disabled={deletingId === it.id}
+                        >
+                          {deletingId === it.id ? (
+                            <Spinner as="span" animation="border" size="sm" />
+                          ) : (
+                            "Eliminar"
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={() => {
+                            setActiveElementId(it);
+                            setShowQMgr(true);
+                          }}
+                        >
+                          Preguntas
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -278,6 +303,12 @@ export function ContentByCourseDetails({ show, sectionId, onHide }: Props) {
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* section de preguntas */}
+      <QuestionManagerModal
+        show={showQMgr}
+        element={activeElementId}
+        onHide={() => setShowQMgr(false)}
+      />
     </>
   );
 }

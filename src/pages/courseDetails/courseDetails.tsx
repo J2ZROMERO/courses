@@ -21,6 +21,8 @@ import {
 import { getCourse } from "../courses/services/courseService";
 import { toast } from "react-toastify";
 import { ContentByCourseDetails } from "../contentByCourseDetails/contentByCourseDetails";
+import { Questionnaire } from "./questionnaire/Questionnaire";
+import { useForm, SubmitHandler } from "react-hook-form";
 
 interface Element {
   id: number;
@@ -42,6 +44,8 @@ interface CourseFull {
   id: number;
   sections: (Section & { elements: Element[] })[];
 }
+
+type QuizAnswers = Record<number, number>; // questionId → optionId
 
 export function CourseDetails() {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +74,12 @@ export function CourseDetails() {
 
   // — Spinner para marcar visto —
   const [markingId, setMarkingId] = useState<number | null>(null);
-
+  const {
+    control,
+    handleSubmit: handleQuizSubmit,
+    reset: resetQuiz,
+    formState: { errors: quizErrors },
+  } = useForm<QuizAnswers>();
   // load full course
   const fetchCourse = async () => {
     setLoading(true);
@@ -83,7 +92,9 @@ export function CourseDetails() {
       setLoading(false);
     }
   };
-
+  const onQuizSubmitInternal: SubmitHandler<QuizAnswers> = (answers) => {
+    // no hacemos nada: dejamos que el padre dispare esto
+  };
   useEffect(() => {
     fetchCourse();
   }, [id]);
@@ -148,6 +159,26 @@ export function CourseDetails() {
     }
   };
 
+  const markSeenWithQuiz = handleQuizSubmit(async (answers) => {
+    if (!videoModal.element) return;
+    setMarkingId(videoModal.element.id);
+    try {
+      await markElementAsSeen({
+        element_id: videoModal.element.id,
+        user_id: user?.user?.id!,
+        // si tu endpoint espera algo con el quiz, lo pasas aquí:
+        quiz_answers: answers,
+      });
+      toast.success("Tema completado");
+      setVideoModal({ element: null, show: false });
+      fetchCourse();
+    } catch {
+      toast.warning("Respuestas incorrectas vuelve a intentarlo.");
+    } finally {
+      setMarkingId(null);
+      resetQuiz();
+    }
+  });
   if (loading || !course) {
     return (
       <div className="d-flex justify-content-center my-5">
@@ -160,7 +191,6 @@ export function CourseDetails() {
     setCurrentSectionId(sectionId);
     setItemModalOpen(true);
   };
-
   return (
     <Container className="my-5">
       {/* Teacher-only: subsection CRUD */}
@@ -282,7 +312,7 @@ export function CourseDetails() {
                       variant="outline-info"
                       onClick={() => openItemModal(sec.id)}
                     >
-                      Agregar
+                      Temas
                     </Button>
                   </td>
                 </tr>
@@ -372,17 +402,34 @@ export function CourseDetails() {
           <Modal.Title>{videoModal.element?.title}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="d-flex justify-content-center">
-          {videoModal.element && (
-            <div style={{ width: "100%", height: "75vh" }}>
-              <iframe
-                src={videoModal.element.url}
-                title={videoModal.element.title}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+          {videoModal?.element && (
+            <div className="w-100 d-flex flex-column">
+              <div style={{ width: "100%", height: "75vh" }}>
+                <iframe
+                  src={videoModal.element.url}
+                  title={videoModal.element.title}
+                  width="100%"
+                  height="80%"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              {
+                // @ts-ignore: asume que preguntas vienen anidadas en el elemento
+                ((videoModal.element as any).questions as Question[])?.length >
+                  0 && (
+                  <div className="">
+                    <h5>Cuestionario</h5>
+                    <Questionnaire
+                      questions={videoModal.element.questions}
+                      control={control}
+                      errors={quizErrors}
+                      onSubmit={onQuizSubmitInternal}
+                    />
+                  </div>
+                )
+              }
             </div>
           )}
         </Modal.Body>
@@ -392,20 +439,23 @@ export function CourseDetails() {
             variant={
               videoModal.element?.status_progress ? "success" : "primary"
             }
-            onClick={handleMarkSeen}
+            onClick={markSeenWithQuiz} // ④ disparamos QUIZ + API
             disabled={markingId === videoModal.element?.id}
           >
             {markingId === videoModal.element?.id ? (
               <Spinner as="span" animation="border" size="sm" />
             ) : videoModal.element?.status_progress ? (
-              "✔ Visto"
+              "✔ Completado"
             ) : (
-              "Marcar como visto"
+              "Enviar questionario"
             )}
           </Button>
           <Button
             variant="outline-secondary"
-            onClick={() => setVideoModal({ ...videoModal, show: false })}
+            onClick={() => {
+              setVideoModal({ ...videoModal, show: false });
+              resetQuiz();
+            }}
           >
             Cerrar
           </Button>
@@ -442,6 +492,7 @@ export function CourseDetails() {
 
       {/* Modal de Contenidos (componente externo) */}
       <ContentByCourseDetails
+        modalTitle={`Temas modulo ${secTitle}`}
         show={itemModalOpen}
         sectionId={currentSectionId}
         onHide={() => {
