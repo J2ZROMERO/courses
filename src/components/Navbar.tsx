@@ -22,6 +22,9 @@ export default function Navbar() {
         <BsNavbar.Toggle aria-controls="main-nav" />
         <BsNavbar.Collapse id="main-nav">
           <Nav className="ms-auto align-items-center">
+            <Nav.Link as={Link} to="/certifications">
+              Certificaciones
+            </Nav.Link>
             {/* <Nav.Link as={Link} to="/">
               Inicio
             </Nav.Link> */}
