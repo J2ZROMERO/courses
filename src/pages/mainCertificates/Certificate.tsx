@@ -31,6 +31,7 @@ interface ICertificate {
 export function Certification() {
   const [certifications, setCertifications] = useState<ICertificate[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user, userIs } = useAuth();
 
   // create/edit modal
   const [showModal, setShowModal] = useState(false);
@@ -47,7 +48,6 @@ export function Certification() {
   // enroll-users modal
   const [enrollCert, setEnrollCert] = useState<ICertificate | null>(null);
 
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const fetchCertifications = async () => {
@@ -61,6 +61,7 @@ export function Certification() {
       setLoading(false);
     }
   };
+  console.log(user);
 
   useEffect(() => {
     fetchCertifications();
@@ -71,19 +72,22 @@ export function Certification() {
   ) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSave = async () => {
+    console.log(user?.id);
+
     setLoading(true);
     try {
       if (isEditing && formData.id) {
         await updateCertification(formData.id, {
           title: formData.title,
           description: formData.description,
+          user_id: user?.id,
         });
         toast.success("Certificación actualizada correctamente");
       } else {
         await createCertification({
           title: formData.title,
           description: formData.description,
-          user_id: user?.id,
+          user_id: user?.user?.id,
         });
         toast.success("Certificación creada correctamente");
       }
@@ -125,15 +129,16 @@ export function Certification() {
   return (
     <Container className="my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Certificaciones</h2>
-        <Button
-          onClick={() => {
-            setFormData({ title: "", description: "" });
-            setShowModal(true);
-          }}
-        >
-          + Nueva Certificación
-        </Button>
+        {userIs("teacher") && (
+          <Button
+            onClick={() => {
+              setFormData({ title: "", description: "" });
+              setShowModal(true);
+            }}
+          >
+            + Nueva Certificación
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -151,40 +156,42 @@ export function Certification() {
                 <Card.Body>
                   <Card.Title>{cert.title}</Card.Title>
                   <Card.Text>{cert.description}</Card.Text>
-                  <div className="d-flex justify-content-between">
-                    {/* Edit */}
-                    <Button
-                      variant="outline-secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(cert);
-                      }}
-                    >
-                      Editar
-                    </Button>
+                  {userIs("teacher") && (
+                    <div className="d-flex justify-content-between flex-wrap gap-3">
+                      {/* Edit */}
+                      <Button
+                        variant="outline-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(cert);
+                        }}
+                      >
+                        Editar
+                      </Button>
 
-                    {/* Delete */}
-                    <Button
-                      variant="outline-danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCertificationToDelete(cert);
-                      }}
-                    >
-                      Eliminar
-                    </Button>
+                      {/* Delete */}
+                      <Button
+                        variant="outline-danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCertificationToDelete(cert);
+                        }}
+                      >
+                        Eliminar
+                      </Button>
 
-                    {/* Enroll Users */}
-                    <Button
-                      variant="outline-primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEnrollCert(cert);
-                      }}
-                    >
-                      Agregar Cursos
-                    </Button>
-                  </div>
+                      {/* Enroll Users */}
+                      <Button
+                        variant="outline-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEnrollCert(cert);
+                        }}
+                      >
+                        Agregar Cursos
+                      </Button>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </Col>

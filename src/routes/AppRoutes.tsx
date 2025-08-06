@@ -8,6 +8,7 @@ import { Courses } from "../pages/courses/Courses";
 import { CourseDetails } from "../pages/courseDetails/courseDetails";
 import { Users } from "../pages/users/Users";
 import { Certification } from "../pages/mainCertificates/Certificate";
+import { CertificationDetails } from "../pages/mainCertificates/components/CertificationDetails";
 export default function AppRoutes() {
   const { user } = useAuth();
 
@@ -27,10 +28,13 @@ export default function AppRoutes() {
           <Route path="/courses/:id" element={<CourseDetails />} />
           <Route path="/users" element={<Users />} />
           <Route path="/certifications" element={<Certification />} />
-          <Route path="/certifications/:id" element={<Certification />} />
+          <Route
+            path="/certifications/:id"
+            element={<CertificationDetails />}
+          />
           <Route
             path="/certifications/:id/courses/:id"
-            element={<Certification />}
+            element={<CourseDetails />}
           />
 
           {/* aquí más rutas protegidas */}

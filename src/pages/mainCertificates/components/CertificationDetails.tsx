@@ -12,7 +12,7 @@ import {
 } from "react-bootstrap";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getCertification } from "../services/certificationService";
 
 interface Course {
@@ -27,17 +27,20 @@ type FormValues = {
   description: string;
 };
 
-export function CourseDetails() {
+export function CertificationDetails() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
+  const { id } = useParams<{ id: string }>();
 
-  useEffect((e) => {
+  useEffect(() => {
+    if (!id) return; // guard against undefined
     setLoading(true);
-    getCertification(certification?.id)
-      .then((e) => setCourses(e?.data?.data))
-      .finally(setLoading(false));
-  }, []);
+    getCertification(id)
+      .then((res) => setCourses(res.data.data))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   return (
     <Container className="my-5">
@@ -51,10 +54,12 @@ export function CourseDetails() {
         </div>
       ) : (
         <Row>
-          {courses.map((c) => (
+          {courses?.courses?.map((c) => (
             <Col key={c.id} md={4} className="mb-4">
               <Card
-                onClick={() => navigate(`/courses/${c.id}`)}
+                onClick={() =>
+                  navigate(`/certifications/${id}/courses/${c.id}`)
+                }
                 style={{ cursor: "pointer" }}
               >
                 <Card.Body>
