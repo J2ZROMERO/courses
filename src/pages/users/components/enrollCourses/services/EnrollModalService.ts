@@ -7,6 +7,6 @@ export interface classes {
   user_id: number;
 }
 
-export function enrollUserInCourses(payload: classes) {
-  return api.post("/sign-to-course", payload);
+export function enrollUserToCertifications(payload: classes) {
+  return api.post("/sign-to-certification", payload);
 }

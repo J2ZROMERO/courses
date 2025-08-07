@@ -7,7 +7,8 @@ import { toast } from "react-toastify";
 
 import { getCourses } from "../../../courses/services/courseService";
 import { getUserById, User } from "../../services/userService";
-import { enrollUserInCourses } from "./services/EnrollModalService";
+import { enrollUserToCertifications } from "./services/EnrollModalService";
+import { getCertifications } from "../../../mainCertificates/services/certificationService";
 
 interface Props {
   show: boolean;
@@ -25,7 +26,7 @@ export interface Course {
 }
 
 type FormValues = {
-  course_ids: number[];
+  certification_ids: number[];
   user_id: number | null;
 };
 
@@ -38,33 +39,36 @@ export function EnrollModal({ show, user, onHide }: Props) {
     getValues,
     formState: { isSubmitting },
   } = useForm<FormValues>({
-    defaultValues: { course_ids: [], user_id: null },
+    defaultValues: { certification_ids: [], user_id: null },
   });
 
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [certifications, setCertifications] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 1) Cuando abra el modal, cargo el catálogo de cursos
   useEffect(() => {
     if (!show) return;
     setLoading(true);
-    getCourses()
-      .then((res) => setCourses(res.data.data?.data || []))
+    getCertifications()
+      .then((res) => setCertifications(res.data.data?.data || []))
       .catch(() => toast.error("No se pudieron cargar cursos"))
       .finally(() => setLoading(false));
   }, [show]);
 
   // 2) Pre‑selecciono en el form los cursos donde ya está inscrito
   useEffect(() => {
-    if (!show) return;
-    setValue("user_id", user?.id);
-    getUserById(user?.id)
+    if (!show || !user?.id) return;
+
+    setValue("user_id", user.id);
+    getUserById(user.id)
       .then((res) => {
-        // suponemos que res.data.data es un array de Course con pivot
-        const enrolledIds = (res.data.data as Course[]).map((c) => c.id);
-        reset({ course_ids: enrolledIds, user_id: user?.id });
+        const data = res?.data?.certifications;
+        const enrolledIds = Array.isArray(data) ? data.map((c) => c.id) : [];
+        console.log(enrolledIds);
+
+        reset({ certification_ids: enrolledIds, user_id: user.id });
       })
-      .catch(() => {
+      .catch((err) => {
         toast.error("No se pudieron cargar inscripciones");
       });
   }, [show, user?.id, reset, setValue]);
@@ -72,7 +76,7 @@ export function EnrollModal({ show, user, onHide }: Props) {
   const onSubmit = async () => {
     const payload = getValues();
     try {
-      await enrollUserInCourses(payload);
+      await enrollUserToCertifications(payload);
       toast.success("Inscripción guardada");
       onHide();
     } catch {
@@ -94,29 +98,32 @@ export function EnrollModal({ show, user, onHide }: Props) {
             </div>
           ) : (
             <Form.Group className="mb-5">
-              <Form.Label>Cursos</Form.Label>
+              <Form.Label>Certificaciones</Form.Label>
               <Controller
                 control={control}
-                name="course_ids"
+                name="certification_ids"
                 render={({ field }) => {
                   // a partir de field.value (array de IDs), generamos el value de React‑Select
+                  console.log(field);
+
                   const value = field.value
                     .map((id) => {
-                      const opt = courses.find((c) => c.id === id);
+                      const opt = certifications?.find((c) => c.id === id);
                       return opt ? { value: opt.id, label: opt.title } : null;
                     })
                     .filter(Boolean) as { value: number; label: string }[];
+                  console.log(certifications);
 
                   return (
                     <Select
-                      options={courses.map((c) => ({
+                      options={certifications?.map((c) => ({
                         value: c.id,
                         label: c.title,
                       }))}
                       isMulti
                       closeMenuOnSelect={false}
                       classNamePrefix="react-select"
-                      placeholder="Selecciona uno o varios cursos…"
+                      placeholder="Selecciona uno o varios certificados"
                       value={value}
                       onChange={(selected) => {
                         const ids = (selected as { value: number }[]).map(

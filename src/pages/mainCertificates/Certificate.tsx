@@ -20,6 +20,7 @@ import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { EnrollModal } from "./components/enrollCourses/EnrollModal";
+import { getUserById } from "../users/services/userService";
 
 interface ICertificate {
   id?: number;
@@ -53,27 +54,28 @@ export function Certification() {
   const fetchCertifications = async () => {
     setLoading(true);
     try {
-      const res = await getCertifications();
-      setCertifications(res?.data?.data?.data);
+      const res = await (userIs("teacher")
+        ? getCertifications()
+        : getUserById(user?.user?.id));
+      userIs("teacher")
+        ? setCertifications(res?.data?.data?.data)
+        : setCertifications(res?.data?.certifications);
     } catch {
       toast.error("Error cargando certificaciones");
     } finally {
       setLoading(false);
     }
   };
-  console.log(user);
 
   useEffect(() => {
     fetchCertifications();
-  }, []);
+  }, [user?.id]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSave = async () => {
-    console.log(user?.id);
-
     setLoading(true);
     try {
       if (isEditing && formData.id) {
@@ -126,6 +128,8 @@ export function Certification() {
     }
   };
 
+  console.log(certifications);
+
   return (
     <Container className="my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -147,7 +151,7 @@ export function Certification() {
         </div>
       ) : (
         <Row>
-          {certifications.map((cert) => (
+          {certifications?.map((cert) => (
             <Col key={cert.id} md={4} className="mb-4">
               <Card
                 onClick={() => navigate(`/certifications/${cert.id}`)}

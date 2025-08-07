@@ -28,9 +28,11 @@ export default function Navbar() {
             {/* <Nav.Link as={Link} to="/">
               Inicio
             </Nav.Link> */}
-            <Nav.Link as={Link} to="/courses">
-              Cursos
-            </Nav.Link>
+            {userIs("teacher") && (
+              <Nav.Link as={Link} to="/courses">
+                Cursos
+              </Nav.Link>
+            )}
             {userIs("teacher") && (
               <Nav.Link as={Link} to="/users">
                 Usuarios

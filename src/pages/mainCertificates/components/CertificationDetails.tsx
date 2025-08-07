@@ -34,7 +34,7 @@ export function CertificationDetails() {
   const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
-    if (!id) return; // guard against undefined
+    if (!id) return;
     setLoading(true);
     getCertification(id)
       .then((res) => setCourses(res.data.data))

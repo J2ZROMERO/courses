@@ -63,7 +63,7 @@ export function EnrollModal({ show, certification, onHide }: Props) {
     const payload = getValues();
     try {
       await enrollCourseInCertification(certification.id, {
-        certification_id: certification.id,
+        certification_id: certification?.id,
         ...payload,
       });
       toast.success("Cursos agregados correctamente");
