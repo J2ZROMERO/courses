@@ -191,6 +191,8 @@ export function CourseDetails() {
     setCurrentSectionId(sectionId);
     setItemModalOpen(true);
   };
+  console.log(videoModal);
+
   return (
     <Container className="my-5">
       {/* Teacher-only: subsection CRUD */}
@@ -330,7 +332,7 @@ export function CourseDetails() {
         <div key={sec.id} className="mb-4">
           <h5 className="text-secondary">{sec.title}</h5>
           <Row className="d-flex flex-column">
-            {sec?.elements?.map((el) => (
+            {sec?.subsections?.map((el) => (
               <Col
                 key={el.id}
                 xs={12}
@@ -357,7 +359,7 @@ export function CourseDetails() {
                   <Card
                     style={{ cursor: "pointer" }}
                     onClick={() =>
-                      el.unlock
+                      !el.unlock
                         ? setVideoModal({ element: el, show: true })
                         : null
                     }

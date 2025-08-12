@@ -77,7 +77,7 @@ export function ContentByCourseDetails({
     const payload: SectionItemPayload = {
       ...data,
       url: toEmbedUrl(data.url),
-      section_id: sectionId,
+      subsection_id: sectionId,
     };
     try {
       if (editing) {
