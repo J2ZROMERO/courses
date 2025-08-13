@@ -17,18 +17,18 @@ export interface SectionItem extends SectionItemPayload {
 
 // Listar items de una sección
 export const getContentBySectionItems = (sectionId: number) =>
-  api.get<SectionItem[]>(`/subsections?section=${sectionId}`);
+  api.get<SectionItem[]>(`/elements?subsection=${sectionId}`);
 
 // Crear un item
 export const createContentBySectionItem = (payload: SectionItemPayload) =>
-  api.post("/subsections", payload);
+  api.post("/elements", payload);
 
 // Actualizar un item
 export const updateContentBySectionItem = (
   id: number,
   payload: Partial<SectionItemPayload>
-) => api.put(`/subsections/${id}`, payload);
+) => api.put(`/elements/${id}`, payload);
 
 // Borrar un item
 export const deleteContentBySectionItem = (id: number) =>
-  api.delete(`/subsections/${id}`);
+  api.delete(`/elements/${id}`);

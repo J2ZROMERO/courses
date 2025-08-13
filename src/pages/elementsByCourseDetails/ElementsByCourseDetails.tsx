@@ -13,7 +13,6 @@ import { toast } from "react-toastify";
 import { toEmbedUrl } from "../../utils";
 import { useForm } from "react-hook-form";
 import { QuestionManagerModal } from "../questions/QuestionManagerModal";
-import { ElementsByCourseDetails } from "../elementsByCourseDetails/ElementsByCourseDetails";
 
 interface Props {
   show: boolean;
@@ -22,7 +21,7 @@ interface Props {
   modalTitle: string;
 }
 
-export function ContentByCourseDetails({
+export function ElementsByCourseDetails({
   modalTitle,
   show,
   sectionId,
@@ -34,11 +33,8 @@ export function ContentByCourseDetails({
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<SectionItem | null>(null);
   const [editing, setEditing] = useState<SectionItem | null>(null);
-  // Inside ContentByCourseDetails
-  const [showElementsModal, setShowElementsModal] = useState(false);
-  const [activeSectionItemId, setActiveSectionItemId] = useState<number | null>(
-    null
-  );
+  const [showQMgr, setShowQMgr] = useState(false);
+  const [activeElementId, setActiveElementId] = useState<number | null>(null);
 
   const {
     register,
@@ -47,7 +43,7 @@ export function ContentByCourseDetails({
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: { title: "", position: 0 },
+    defaultValues: { title: "", url: "", position: 0, type: 1 },
   });
 
   const fetch = async () => {
@@ -72,7 +68,7 @@ export function ContentByCourseDetails({
 
   const resetForm = () => {
     setEditing(null);
-    reset({ title: "", position: items.length });
+    reset({ title: "", url: "", position: items.length, type: 1 });
   };
 
   const onSubmit = async (data: any) => {
@@ -80,7 +76,8 @@ export function ContentByCourseDetails({
     setSaving(true);
     const payload: SectionItemPayload = {
       ...data,
-      section_id: sectionId,
+      url: toEmbedUrl(data.url),
+      subsection_id: sectionId,
     };
     try {
       if (editing) {
@@ -143,7 +140,16 @@ export function ContentByCourseDetails({
                 Este campo es requerido.
               </Form.Control.Feedback>
             </Form.Group>
-
+            <Form.Group className="mb-2">
+              <Form.Label>URL</Form.Label>
+              <Form.Control
+                {...register("url", { required: true })}
+                isInvalid={!!errors.url}
+              />
+              <Form.Control.Feedback type="invalid">
+                Este campo es requerido.
+              </Form.Control.Feedback>
+            </Form.Group>
             <div className="d-flex gap-4">
               <Form.Group className="mb-2 w-50">
                 <Form.Label>Posición</Form.Label>
@@ -156,8 +162,20 @@ export function ContentByCourseDetails({
                   Este campo es requerido.
                 </Form.Control.Feedback>
               </Form.Group>
+              <Form.Group className="mb-3 w-50">
+                <Form.Label>Tipo</Form.Label>
+                <Form.Select
+                  {...register("type", { required: true })}
+                  isInvalid={!!errors.type}
+                >
+                  <option value={1}>Vídeo</option>
+                  <option value={2}>Documento</option>
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                  Este campo es requerido.
+                </Form.Control.Feedback>
+              </Form.Group>
             </div>
-
             <div className="text-end">
               <Button type="submit" disabled={saving}>
                 {saving ? (
@@ -181,7 +199,9 @@ export function ContentByCourseDetails({
                 <tr>
                   {/* <th>#</th> */}
                   <th>Título</th>
+                  <th>URL</th>
                   <th>Posicion</th>
+                  <th>Tipo</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -190,7 +210,13 @@ export function ContentByCourseDetails({
                   <tr key={it.id}>
                     {/* <td>{i + 1}</td> */}
                     <td>{it.title}</td>
+                    <td>
+                      <a href={it.url} target="_blank" rel="noreferrer">
+                        Ver
+                      </a>
+                    </td>
                     <td>{it.position}</td>
+                    <td>{it.type == 1 ? "Video" : ""}</td>
                     <td>
                       <div className="d-flex gap-2">
                         <Button
@@ -199,7 +225,9 @@ export function ContentByCourseDetails({
                           onClick={() => {
                             setEditing(it);
                             setValue("title", it.title);
+                            setValue("url", it.url);
                             setValue("position", it.position);
+                            setValue("type", it.type);
                           }}
                           disabled={deletingId === it.id}
                         >
@@ -225,11 +253,11 @@ export function ContentByCourseDetails({
                           size="sm"
                           variant="outline-primary"
                           onClick={() => {
-                            setActiveSectionItemId(it.id); // <- id, not the whole object
-                            setShowElementsModal(true);
+                            setActiveElementId(it);
+                            setShowQMgr(true);
                           }}
                         >
-                          Subtemas
+                          Preguntas
                         </Button>
                       </div>
                     </td>
@@ -245,6 +273,7 @@ export function ContentByCourseDetails({
           </Button>
         </Modal.Footer>
       </Modal>
+
       {/* Modal de confirmación de eliminación */}
       <Modal show={!!itemToDelete} onHide={() => setItemToDelete(null)}>
         <Modal.Header closeButton>
@@ -274,11 +303,11 @@ export function ContentByCourseDetails({
           </Button>
         </Modal.Footer>
       </Modal>
-      <ElementsByCourseDetails
-        modalTitle={`Subtemas"`}
-        show={showElementsModal}
-        sectionId={activeSectionItemId}
-        onHide={() => setShowElementsModal(false)}
+      {/* section de preguntas */}
+      <QuestionManagerModal
+        show={showQMgr}
+        element={activeElementId}
+        onHide={() => setShowQMgr(false)}
       />
     </>
   );

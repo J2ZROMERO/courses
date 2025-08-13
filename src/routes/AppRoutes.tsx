@@ -5,7 +5,7 @@ import LoginPage from "../pages/login/LoginPage";
 import { useAuth } from "../context/AuthContext";
 import Layout from "../components/Layout";
 import { Courses } from "../pages/courses/Courses";
-import { CourseDetails } from "../pages/courseDetails/courseDetails";
+import { CourseDetails } from "../pages/sections/courseDetails";
 import { Users } from "../pages/users/Users";
 import { Certification } from "../pages/mainCertificates/Certificate";
 import { CertificationDetails } from "../pages/mainCertificates/components/CertificationDetails";
