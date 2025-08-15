@@ -76,7 +76,7 @@ export function CourseDetails() {
   const [markingId, setMarkingId] = useState<number | null>(null);
   const {
     control,
-    handleSubmit: handleQuizSubmit,
+    handleSubmit,
     reset: resetQuiz,
     formState: { errors: quizErrors },
   } = useForm<QuizAnswers>();
@@ -92,9 +92,7 @@ export function CourseDetails() {
       setLoading(false);
     }
   };
-  const onQuizSubmitInternal: SubmitHandler<QuizAnswers> = (answers) => {
-    // no hacemos nada: dejamos que el padre dispare esto
-  };
+
   useEffect(() => {
     fetchCourse();
   }, [id]);
@@ -144,23 +142,7 @@ export function CourseDetails() {
     }
   };
 
-  // mark as seen con spinner
-  const handleMarkSeen = async () => {
-    if (!videoModal.element) return;
-    const elId = videoModal.element.id;
-    setMarkingId(elId);
-    try {
-      await markElementAsSeen({ element_id: elId, user_id: user?.user?.id! });
-      setVideoModal({ element: null, show: false });
-      fetchCourse();
-    } catch {
-      toast.error("No se pudo actualizar progreso");
-    } finally {
-      setMarkingId(null);
-    }
-  };
-
-  const markSeenWithQuiz = handleQuizSubmit(async (answers) => {
+  const markSeenWithQuiz = handleSubmit(async (answers) => {
     if (!videoModal.element) return;
     setMarkingId(videoModal.element.id);
     try {
@@ -366,7 +348,7 @@ export function CourseDetails() {
                           <Card
                             style={{ cursor: "pointer" }}
                             onClick={() =>
-                              !el.unlock
+                              el.unlock
                                 ? setVideoModal({ element: el, show: true })
                                 : null
                             }
@@ -438,7 +420,7 @@ export function CourseDetails() {
                       questions={videoModal.element.questions}
                       control={control}
                       errors={quizErrors}
-                      onSubmit={onQuizSubmitInternal}
+                      onSubmit={markSeenWithQuiz}
                     />
                   </div>
                 )

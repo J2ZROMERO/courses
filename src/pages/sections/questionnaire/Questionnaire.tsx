@@ -37,7 +37,7 @@ export function Questionnaire({ questions, control, errors, onSubmit }: Props) {
               <Controller
                 name={`question_${q.id}` as any}
                 control={control}
-                rules={{ required: "Selecciona una opción" }}
+                // rules={{ required: "Selecciona una opción" }}
                 render={({ field }) => (
                   <Form.Group>
                     {q.options.map((opt) => (
