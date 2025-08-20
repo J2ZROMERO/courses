@@ -312,12 +312,12 @@ export function CourseDetails() {
 
       {course?.sections?.map((sec) => (
         <div key={sec.id} className="mb-4">
-          <h5 className="text-secondary">{sec.title}</h5>
+          <h5 className="">{sec.title}</h5>
           <Row className="d-flex flex-column">
             {sec?.subsections?.map((com) => {
               return (
                 <>
-                  <div className="d-flex justify-content-center align-items-center my-2">
+                  <div className="d-flex text-secondary align-items-center my-2">
                     {com?.title}
                   </div>
                   {com?.elements?.map((el) => {
@@ -340,7 +340,7 @@ export function CourseDetails() {
                             marginRight: 10,
                           }}
                         >
-                          {el?.position}
+                          {el?.position + 1}
                         </div>
 
                         {/* Make this wrapper position:relative so we can absolutely position the lock */}
@@ -442,7 +442,7 @@ export function CourseDetails() {
             ) : videoModal.element?.status_progress ? (
               "✔ Completado"
             ) : (
-              "Enviar questionario"
+              "Completar sección"
             )}
           </Button>
           <Button

@@ -275,7 +275,7 @@ export function ContentByCourseDetails({
         </Modal.Footer>
       </Modal>
       <ElementsByCourseDetails
-        modalTitle={`Subtemas"`}
+        modalTitle={`Subtemas`}
         show={showElementsModal}
         sectionId={activeSectionItemId}
         onHide={() => setShowElementsModal(false)}
